@@ -1,38 +1,46 @@
 import copy
 
-TRANSLATIONS_CART_SYMBOL_TO_UNDERLYING_TRACK = [(">", "-"), ("<", "-"), ("V", "|"), ("^", "|")]
+TRANSLATIONS_CART_SYMBOL_TO_UNDERLYING_TRACK = [(">", "-"), ("<", "-"), ("v", "|"), ("^", "|")]
 
-CART_MOVEMENTS = [(">", 1, 0), ("<", -1, 0), ("V", 0, 1), ("^", 0, -1)]
+CART_MOVEMENTS = [(">", 1, 0), ("<", -1, 0), ("v", 0, 1), ("^", 0, -1)]
 
 CART_ROTATIONS = [
-    ("V", "\\", ">"), ("V", "/", "<"), ("V", "|", "V"),
+    ("v", "\\", ">"), ("v", "/", "<"), ("v", "|", "v"),
     ("^", "\\", "<"), ("^", "/", ">"), ("^", "|", "^"),
-    (">", "\\", "V"), (">", "/", "^"), (">", "-", ">"),
-    ("<", "\\", "^"), ("<", "/", "V"), ("<", "-", "<")
+    (">", "\\", "v"), (">", "/", "^"), (">", "-", ">"),
+    ("<", "\\", "^"), ("<", "/", "v"), ("<", "-", "<")
 ]
+
+TURN_LEFT = [("v", ">"), (">", "^"), ("^", "<"), ("<", "v")]
+TURN_RIGHT = [("v", "<"), ("<", "^"), ("^", ">"), (">", "v")]
+TURN_STRAIGHT = [("v", "v"), ("<", "<"), ("^", "^"), (">", ">")]
 
 
 class Cart:
-    def __init__(self, x, y, dir):
+    def __init__(self, x, y, direction):
         self.x = x
         self.y = y
-        self.dir = dir
+        self.direction = direction
+        self.action_count = 0
+
+    def choose_direction(self):
+        return '>'
 
     def __repr__(self):
         return (
             'Cart(' +
             'x=' + str(self.x) + '; '
             'y=' + str(self.y) + '; '
-            'dir=' + str(self.dir) + ')'
+            'dir=' + str(self.direction) + ')'
         )
 
     def __eq__(self, other):
         return (
-            self.x == other.x
-            and
-            self.y == other.y
-            and
-            self.dir == other.dir
+                self.x == other.x
+                and
+                self.y == other.y
+                and
+                self.direction == other.direction
         )
 
 
@@ -62,8 +70,8 @@ class Track:
                         and
                         self.carts[i].y == self.carts[j].y
                 ):
-                    self.carts[i].dir = 'X'
-                    self.carts[j].dir = 'X'
+                    self.carts[i].direction = 'X'
+                    self.carts[j].direction = 'X'
                     return self.carts[i], self.carts[j]
         return None, None
 
@@ -75,21 +83,23 @@ class Track:
         print('after\n', self)
 
     def move_cart(self, cart):
-        if cart.dir == 'X':
+        if cart.direction == 'X':
             return cart
         for direction in CART_MOVEMENTS:
-            if cart.dir == direction[0]:
+            if cart.direction == direction[0]:
                 new_x = cart.x + direction[1]
                 new_y = cart.y + direction[2]
+        if self.track[new_y][new_x] == '+':
+            return Cart(new_x, new_y, cart.choose_direction())
         for rotation in CART_ROTATIONS:
-            if cart.dir == rotation[0] and self.track[new_y][new_x] == rotation[1]:
-                new_dir = rotation[2]
-        return Cart(new_x, new_y, new_dir)
+            if cart.direction == rotation[0] and self.track[new_y][new_x] == rotation[1]:
+                new_direction = rotation[2]
+        return Cart(new_x, new_y, new_direction)
 
     def __repr__(self):
         track_with_carts = copy.deepcopy(self.track)
         for cart in self.carts:
-            track_with_carts[cart.y][cart.x] = cart.dir
+            track_with_carts[cart.y][cart.x] = cart.direction
         return (
             "Carts:" + str(self.carts) + "\n" +
             "\n".join(["".join(track_with_carts[x]) for x in range(len(track_with_carts))]) +
