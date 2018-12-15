@@ -13,7 +13,7 @@ CART_ROTATIONS = [
 
 TURN_LEFT = [("v", ">"), (">", "^"), ("^", "<"), ("<", "v")]
 TURN_RIGHT = [("v", "<"), ("<", "^"), ("^", ">"), (">", "v")]
-TURN_STRAIGHT = [("v", "v"), ("<", "<"), ("^", "^"), (">", ">")]
+GO_STRAIGHT = [("v", "v"), ("<", "<"), ("^", "^"), (">", ">")]
 
 
 class Cart:
@@ -24,14 +24,20 @@ class Cart:
         self.action_count = 0
 
     def choose_direction(self):
-        return '>'
+        action = [TURN_LEFT, GO_STRAIGHT, TURN_RIGHT][self.action_count % 3]
+        self.action_count += 1
+        return [
+            turn[1]
+            for turn in action
+            if turn[0] == self.direction
+        ][0]
 
     def __repr__(self):
         return (
-            'Cart(' +
-            'x=' + str(self.x) + '; '
-            'y=' + str(self.y) + '; '
-            'dir=' + str(self.direction) + ')'
+                'Cart(' +
+                'x=' + str(self.x) + ', '
+                                     'y=' + str(self.y) + ', '
+                                                          'direction=\'' + self.direction + '\')'
         )
 
     def __eq__(self, other):
@@ -63,7 +69,7 @@ class Track:
 
     def check_for_collision(self):
         for i in range(len(self.carts)):
-            for j in range(i+1, len(self.carts)):
+            for j in range(i + 1, len(self.carts)):
                 print('checking carts: i=', self.carts[i], '; j=', self.carts[j])
                 if (
                         self.carts[i].x == self.carts[j].x
@@ -87,30 +93,33 @@ class Track:
             return cart
         for direction in CART_MOVEMENTS:
             if cart.direction == direction[0]:
-                new_x = cart.x + direction[1]
-                new_y = cart.y + direction[2]
-        if self.track[new_y][new_x] == '+':
-            return Cart(new_x, new_y, cart.choose_direction())
+                cart.x += direction[1]
+                cart.y += direction[2]
+        track_under_cart = self.track[cart.y][cart.x]
+        if track_under_cart == '+':
+            cart.direction = cart.choose_direction()
+            return cart
         for rotation in CART_ROTATIONS:
-            if cart.direction == rotation[0] and self.track[new_y][new_x] == rotation[1]:
-                new_direction = rotation[2]
-        return Cart(new_x, new_y, new_direction)
+            if cart.direction == rotation[0] and track_under_cart == rotation[1]:
+                cart.direction = rotation[2]
+                break
+        return cart
 
     def __repr__(self):
         track_with_carts = copy.deepcopy(self.track)
         for cart in self.carts:
             track_with_carts[cart.y][cart.x] = cart.direction
         return (
-            "Carts:" + str(self.carts) + "\n" +
-            "\n".join(["".join(track_with_carts[x]) for x in range(len(track_with_carts))]) +
-            "\n"
+                "Carts:" + str(self.carts) + "\n" +
+                "\n".join(["".join(track_with_carts[x]) for x in range(len(track_with_carts))]) +
+                "\n"
         )
 
     def __eq__(self, other):
         return (
-            self.track == other.track
-            and
-            self.carts == other.carts
+                self.track == other.track
+                and
+                self.carts == other.carts
         )
 
 

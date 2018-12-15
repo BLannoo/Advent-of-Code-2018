@@ -40,9 +40,30 @@ class TestDay13(unittest.TestCase):
         expected.carts = [Cart(2, 1, 'X'), Cart(2, 1, 'X')]
         self.assertEqual(track, expected)
 
-    def test_longer_example(self):
+    def test_longer_example_till_first_turn(self):
         track = create_track(LONGER_EXAMPLE_FILE)
         track.update(1)
         expected = create_track(LONGER_EXAMPLE_FILE)
         expected.carts = [Cart(3, 0, '>'), Cart(9, 4, '>')]
+        self.assertEqual(track, expected)
+
+    def test_longer_example_till_second_turn(self):
+        track = create_track(LONGER_EXAMPLE_FILE)
+        track.update(4)
+        expected = create_track(LONGER_EXAMPLE_FILE)
+        expected.carts = [Cart(x=4, y=2, direction='>'), Cart(x=12, y=4, direction='^')]
+        self.assertEqual(track, expected)
+
+    def test_longer_example_till_third_turn(self):
+        track = create_track(LONGER_EXAMPLE_FILE)
+        track.update(7)
+        expected = create_track(LONGER_EXAMPLE_FILE)
+        expected.carts = [Cart(x=7, y=2, direction='>'), Cart(x=12, y=1, direction='<')]
+        self.assertEqual(track, expected)
+
+    def test_longer_example_till_fourth_turn(self):
+        track = create_track(LONGER_EXAMPLE_FILE)
+        track.update(11)
+        expected = create_track(LONGER_EXAMPLE_FILE)
+        expected.carts = [Cart(x=9, y=4, direction='<'), Cart(x=8, y=1, direction='<')]
         self.assertEqual(track, expected)
