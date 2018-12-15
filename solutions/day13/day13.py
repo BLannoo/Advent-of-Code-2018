@@ -75,6 +75,8 @@ class Track:
         print('after\n', self)
 
     def move_cart(self, cart):
+        if cart.dir == 'X':
+            return cart
         for direction in CART_MOVEMENTS:
             if cart.dir == direction[0]:
                 new_x = cart.x + direction[1]

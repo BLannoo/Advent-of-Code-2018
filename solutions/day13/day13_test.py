@@ -22,7 +22,7 @@ class TestDay13(unittest.TestCase):
             Track('/-\\\n| V\n\\>/')
         )
 
-    def test_collision(self):
+    def test_collision_on_last_moving_cart(self):
         track = create_track(SIMPLE_TRACK_FILE)
         track.update(3)
         expected = Track('/-\\\n| |\n\\-/')
@@ -31,3 +31,10 @@ class TestDay13(unittest.TestCase):
             track,
             expected
         )
+
+    def test_collision_on_first_moving_cart(self):
+        track = Track('/>\\\n\\>/')
+        track.update(2)
+        expected = Track('/-\\\n\\-/')
+        expected.carts = [Cart(2, 1, 'X'), Cart(2, 1, 'X')]
+        self.assertEqual(track, expected)
