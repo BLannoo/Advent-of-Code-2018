@@ -64,29 +64,36 @@ class Track:
 
     def update(self, times):
         for i in range(times):
-            print('doing iteration: ', i)
+            # print('doing iteration: ', i)
             self.__update()
-
-    def check_for_collision(self):
-        for i in range(len(self.carts)):
-            for j in range(i + 1, len(self.carts)):
-                print('checking carts: i=', self.carts[i], '; j=', self.carts[j])
-                if (
-                        self.carts[i].x == self.carts[j].x
-                        and
-                        self.carts[i].y == self.carts[j].y
-                ):
-                    self.carts[i].direction = 'X'
-                    self.carts[j].direction = 'X'
-                    return self.carts[i], self.carts[j]
-        return None, None
+            if len(self.carts) == 1:
+                print(
+                    'stopped at iteration: ', i,
+                    '\nwith cart:', self.carts
+                )
+                return
 
     def __update(self):
-        print('before:\n', self)
+        # print('before:\n', self)
         for i in range(len(self.carts)):
             self.carts[i] = self.move_cart(self.carts[i])
             self.check_for_collision()
-        print('after\n', self)
+        self.remove_collided_carts()
+        # print('after\n', self)
+
+    def remove_collided_carts(self):
+        for cart in [
+            cart
+            for cart in self.carts
+            if cart.direction == 'X'
+        ]:
+            print('crashed cart:', cart)
+        self.carts = [
+            cart
+            for cart in self.carts
+            if not cart.direction == 'X'
+        ]
+
 
     def move_cart(self, cart):
         if cart.direction == 'X':
@@ -104,6 +111,17 @@ class Track:
                 cart.direction = rotation[2]
                 break
         return cart
+
+    def check_for_collision(self):
+        for i in range(len(self.carts)):
+            for j in range(i + 1, len(self.carts)):
+                if (
+                        self.carts[i].x == self.carts[j].x
+                        and
+                        self.carts[i].y == self.carts[j].y
+                ):
+                    self.carts[i].direction = 'X'
+                    self.carts[j].direction = 'X'
 
     def __repr__(self):
         track_with_carts = copy.deepcopy(self.track)
@@ -126,3 +144,8 @@ class Track:
 def create_track(file_name):
     with open(file_name, 'r') as track_string:
         return Track(''.join(track_string.readlines()))
+
+
+if __name__ == "__main__":
+    track = create_track('../../data/day13.txt')
+    track.update(100000)

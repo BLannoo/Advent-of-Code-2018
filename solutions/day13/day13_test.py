@@ -67,3 +67,10 @@ class TestDay13(unittest.TestCase):
         expected = create_track(LONGER_EXAMPLE_FILE)
         expected.carts = [Cart(x=9, y=4, direction='<'), Cart(x=8, y=1, direction='<')]
         self.assertEqual(track, expected)
+
+    def test_longer_example_till_crash(self):
+        track = create_track(LONGER_EXAMPLE_FILE)
+        track.update(14)
+        expected = create_track(LONGER_EXAMPLE_FILE)
+        expected.carts = [Cart(x=7, y=3, direction='X'), Cart(x=7, y=3, direction='X')]
+        self.assertEqual(track, expected)
