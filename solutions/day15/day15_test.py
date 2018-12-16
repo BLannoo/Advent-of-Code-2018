@@ -20,8 +20,7 @@ SMALL_CAVE_MAP: str = """
 """.strip()
 
 
-class TestDay15(unittest.TestCase):
-
+class TestSmallCave(unittest.TestCase):
     def test_small_cave_map_can_be_extracted(self):
         self.assertEqual(
             grid_to_str(scan_input(SMALL_CAVE).cave_map),
@@ -46,4 +45,25 @@ class TestDay15(unittest.TestCase):
         self.assertEqual(
             str(scan_input(SMALL_CAVE)),
             SMALL_CAVE
+        )
+
+
+DESTINATION_PRACTICE_CAVE: str = """
+#######
+#E..G.#
+#...#.#
+#.G.#G#
+#######
+""".strip()
+
+
+class TestDestination(unittest.TestCase):
+    def test_find_targets(self):
+        self.assertEqual(
+            scan_input(DESTINATION_PRACTICE_CAVE).find_targets(Creature('E', Location(1, 1))),
+            [
+                Location(4, 1),
+                Location(2, 3),
+                Location(5, 3)
+            ]
         )
