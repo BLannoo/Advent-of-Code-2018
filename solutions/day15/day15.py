@@ -41,12 +41,22 @@ class Cave:
             cave[creature.loc.y][creature.loc.x] = creature.creature_type
         return grid_to_str(cave)
 
-    def find_targets(self, creature: Creature) -> List[Location]:
+    def find_targets(self, subject: Creature) -> List[Location]:
         return [
             other_creature.loc
             for other_creature in self.creatures
-            if not other_creature.creature_type == creature.creature_type
+            if not other_creature.creature_type == subject.creature_type
         ]
+
+    def find_potential_destinations(self, subject: Creature) -> List[Location]:
+        potential_destinations = [
+            neighbours
+            for loc in self.find_targets(subject)
+            for neighbours in loc.neighbours4()
+            if self.cave_map[neighbours.y][neighbours.x] == '.'
+        ]
+        potential_destinations.sort()
+        return potential_destinations
 
 
 def scan_input(input_string: str) -> Cave:

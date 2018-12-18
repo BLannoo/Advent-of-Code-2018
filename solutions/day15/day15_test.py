@@ -59,11 +59,26 @@ DESTINATION_PRACTICE_CAVE: str = """
 
 class TestDestination(unittest.TestCase):
     def test_find_targets(self):
-        self.assertEqual(
-            scan_input(DESTINATION_PRACTICE_CAVE).find_targets(Creature('E', Location(1, 1))),
+        subject = Creature('E', Location(1, 1))
+        self.assertListEqual(
+            scan_input(DESTINATION_PRACTICE_CAVE).find_targets(subject),
             [
                 Location(4, 1),
                 Location(2, 3),
                 Location(5, 3)
+            ]
+        )
+
+    def test_find_potential_destinations(self):
+        subject = Creature('E', Location(1, 1))
+        self.assertEqual(
+            scan_input(DESTINATION_PRACTICE_CAVE).find_potential_destinations(subject),
+            [
+                Location(3, 1),
+                Location(5, 1),
+                Location(2, 2),
+                Location(5, 2),
+                Location(1, 3),
+                Location(3, 3)
             ]
         )
