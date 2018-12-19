@@ -480,3 +480,11 @@ class TestDay17(unittest.TestCase):
             ..|#######|.
             """.strip().replace(' ', '')
         )
+
+    def test_count_water(self):
+        reservoir: Reservoir = scan_input(EXAMPLE_INPUT)
+        reservoir.flow(58)
+        self.assertEqual(
+            reservoir.count_water(),
+            57
+        )
