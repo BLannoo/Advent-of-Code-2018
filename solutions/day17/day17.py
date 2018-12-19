@@ -146,7 +146,8 @@ def scan_input(input_string: str) -> Reservoir:
 if __name__ == "__main__":
     with open("../../data/day17.txt", "r") as file:
         reservoir = scan_input("".join(file.readlines()).strip())
-    # reservoir.flow(100000)
-    print(reservoir.count_water())
 
-# guess: 37477 is too low
+# guess: 37477 is too low -- issues with falling into flowing water
+# guess: 38026 is too high -- no trace of error in print (reservoir.flow(40000); print(reservoir))
+# guess: 38025 is too high -- not off by one error
+# correct: 38021 -- 5 first rows are above top clay row
