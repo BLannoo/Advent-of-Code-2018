@@ -53,10 +53,16 @@ class Reservoir:
                     if tops.y == self.__focus.y + 1
                 ]
                 if len(tops_of_water_falls) > 0:
-                    self.remove_water_fall(self.__focus)
-                    if len(self.__focuses_to_retry) == 0:
-                        return
-                    self.__focus = self.__backtrace_to_get_new_focus()
+                    non_water_tiles_between_top_of_water_fall_and_flowing_water_hit_by_focus = [
+                        0
+                        for x in range(tops_of_water_falls[0].x, self.__focus.x)
+                        if self.__grid[tops_of_water_falls[0].y][x] != '|'
+                    ]
+                    if len(non_water_tiles_between_top_of_water_fall_and_flowing_water_hit_by_focus) == 0:
+                        self.remove_water_fall(self.__focus)
+                        if len(self.__focuses_to_retry) == 0:
+                            return
+                        self.__focus = self.__backtrace_to_get_new_focus()
 
             # print('space bellow (', self.__focus, ') is taken')
             if self.__grid[self.__focus.y][self.__focus.x - 1] != '.':

@@ -507,3 +507,28 @@ y=5, x=499..501
             |###|
             """.strip().replace(' ', '')
         )
+
+    def test_water_falling_on_water_at_same_hight_as_top_of_water_fall(self):
+        reservoir = scan_input(
+            """
+y=3, x=500..502
+x=501, y=5..6
+y=7, x=499..501
+x=504, y=6..7
+y=8, x=499..504
+            """.strip())
+        reservoir.flow(30)
+        self.assertEqual(
+            str(reservoir),
+            """
+            ..+.....
+            ..|.....
+            .|||||..
+            .|###|..
+            .|...|..
+            .|.#||||
+            |||#||#|
+            |###||#|
+            |######|
+            """.strip().replace(' ', '')
+        )
