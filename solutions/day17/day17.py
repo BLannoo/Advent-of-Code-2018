@@ -27,14 +27,14 @@ class Reservoir:
     __grid: List[List[str]]
     __focus: Location
     __focuses_to_retry: List[Location]
-    __top_of_last_removed_water_fall: Location
+    __top_of_removed_water_falls: List[Location]
 
     def __init__(self, min_x: int, grid: List[List[str]]):
         self.__min_x = min_x
         self.__grid = grid
         self.__focus = Location(SOURCE_X - min_x, 0)
         self.__focuses_to_retry = []
-        self.__top_of_last_removed_water_fall = Location(-1, -1)
+        self.__top_of_removed_water_falls = [Location(-1, -1)]
 
     def flow(self, i: int):
         for temp in range(i):
@@ -45,15 +45,28 @@ class Reservoir:
 
     def __flow(self):
         if self.__grid[self.__focus.y + 1][self.__focus.x] != '.':
-            print('space bellow (', self.__focus, ') is taken')
+
+            if self.__grid[self.__focus.y + 1][self.__focus.x] == '|':
+                tops_of_water_falls = [
+                    tops
+                    for tops in self.__top_of_removed_water_falls
+                    if tops.y == self.__focus.y + 1
+                ]
+                if len(tops_of_water_falls) > 0:
+                    self.remove_water_fall(self.__focus)
+                    if len(self.__focuses_to_retry) == 0:
+                        return
+                    self.__focus = self.__backtrace_to_get_new_focus()
+
+            # print('space bellow (', self.__focus, ') is taken')
             if self.__grid[self.__focus.y][self.__focus.x - 1] != '.':
-                print('space left (', self.__focus, ') is taken')
+                # print('space left (', self.__focus, ') is taken')
                 if self.__grid[self.__focus.y][self.__focus.x + 1] != '.':
-                    print('space right (', self.__focus, ') is taken')
+                    # print('space right (', self.__focus, ') is taken')
                     self.__focus = self.__backtrace_to_get_new_focus()
                     if len(self.__focuses_to_retry) == 0:
                         return
-                    print('returning to: ', self.__focus)
+                    # print('returning to: ', self.__focus)
                     self.__flow()
                     if len(self.__focuses_to_retry) == 0:
                         return
@@ -74,7 +87,7 @@ class Reservoir:
 
     def __backtrace_to_get_new_focus(self):
         potential_new_focus = self.__focuses_to_retry.pop()
-        if potential_new_focus.y < self.__top_of_last_removed_water_fall.y:
+        if potential_new_focus.y < self.__top_of_removed_water_falls[-1].y:
             self.remove_water_fall(potential_new_focus)
             if len(self.__focuses_to_retry) == 0:
                 print("Finished filling: water reached ", self.count_water(), " tiles")
@@ -88,7 +101,7 @@ class Reservoir:
             top_of_fall = self.__focuses_to_retry.pop()
             if top_of_fall.y == 0:
                 break
-        self.__top_of_last_removed_water_fall = top_of_fall
+        self.__top_of_removed_water_falls.append(top_of_fall)
 
     def __change_focus(self, location: Location):
         self.__focuses_to_retry.append(self.__focus)
@@ -127,7 +140,7 @@ def scan_input(input_string: str) -> Reservoir:
 if __name__ == "__main__":
     with open("../../data/day17.txt", "r") as file:
         reservoir = scan_input("".join(file.readlines()).strip())
-        reservoir.flow(100000)
-        print(reservoir.count_water())
-        reservoir.flow(1)
-        print(reservoir.count_water())
+    # reservoir.flow(100000)
+    print(reservoir.count_water())
+
+# guess: 37477 is too low

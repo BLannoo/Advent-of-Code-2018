@@ -488,3 +488,22 @@ class TestDay17(unittest.TestCase):
             reservoir.count_water(),
             57
         )
+
+    def test_water_falling_on_flowing_water(self):
+        reservoir = scan_input(
+            """
+y=3, x=500..500
+y=5, x=499..501
+            """.strip())
+        reservoir.flow(14)
+        self.assertEqual(
+            str(reservoir),
+            """
+            ..+..
+            ..|..
+            .|||.
+            .|#|.
+            |||||
+            |###|
+            """.strip().replace(' ', '')
+        )
