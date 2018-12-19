@@ -38,21 +38,22 @@ class Reservoir:
 
     def flow(self, i: int):
         for temp in range(i):
+            print('iteration: ', temp)
             self.__flow()
             if len(self.__focuses_to_retry) == 0:
                 return
 
     def __flow(self):
         if self.__grid[self.__focus.y + 1][self.__focus.x] != '.':
-            # print('space bellow (', self.__focus, ') is taken')
+            print('space bellow (', self.__focus, ') is taken')
             if self.__grid[self.__focus.y][self.__focus.x - 1] != '.':
-                # print('space left (', self.__focus, ') is taken')
+                print('space left (', self.__focus, ') is taken')
                 if self.__grid[self.__focus.y][self.__focus.x + 1] != '.':
-                    # print('space right (', self.__focus, ') is taken')
+                    print('space right (', self.__focus, ') is taken')
                     self.__focus = self.__backtrace_to_get_new_focus()
                     if len(self.__focuses_to_retry) == 0:
                         return
-                    # print('returning to: ', self.__focus)
+                    print('returning to: ', self.__focus)
                     self.__flow()
                     if len(self.__focuses_to_retry) == 0:
                         return
@@ -99,14 +100,15 @@ class Reservoir:
     def count_water(self):
         return str(self).count('|')
 
+
 def scan_input(input_string: str) -> Reservoir:
     veins: List[Location] = [
         vein
         for vein_string in input_string.split('\n')
         for vein in parse_vein(vein_string)
     ]
-    min_x = min(min([vein.x for vein in veins]), SOURCE_X)
-    max_x = max(max([vein.x for vein in veins]), SOURCE_X)
+    min_x = min(min([vein.x for vein in veins]), SOURCE_X) - 1
+    max_x = max(max([vein.x for vein in veins]), SOURCE_X) + 1
     max_y = max([vein.y for vein in veins])
 
     grid = [
@@ -120,3 +122,12 @@ def scan_input(input_string: str) -> Reservoir:
     grid[0][SOURCE_X - min_x] = '+'
 
     return Reservoir(min_x, grid)
+
+
+if __name__ == "__main__":
+    with open("../../data/day17.txt", "r") as file:
+        reservoir = scan_input("".join(file.readlines()).strip())
+        reservoir.flow(100000)
+        print(reservoir.count_water())
+        reservoir.flow(1)
+        print(reservoir.count_water())
