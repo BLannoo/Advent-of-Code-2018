@@ -35,10 +35,11 @@ class Reservoir:
         self.__focus = Location(SOURCE_X - min_x, 0)
         self.__focuses_to_retry = []
         self.__top_of_removed_water_falls = [Location(-1, -1)]
+        self.__bottom_of_removed_water_falls = [Location(-1, -1)]
 
     def flow(self, i: int):
         for temp in range(i):
-            print('iteration: ', temp)
+            # print('flow iteration: ', temp)
             self.__flow()
             if len(self.__focuses_to_retry) == 0:
                 return
@@ -102,6 +103,7 @@ class Reservoir:
         return potential_new_focus
 
     def remove_water_fall(self, bottom_of_fall: Location):
+        self.__bottom_of_removed_water_falls.append(bottom_of_fall)
         top_of_fall = bottom_of_fall
         while bottom_of_fall.x == self.__focuses_to_retry[-1].x:
             top_of_fall = self.__focuses_to_retry.pop()
@@ -118,6 +120,25 @@ class Reservoir:
 
     def count_water(self):
         return str(self).count('|')
+
+    def dry(self):
+        for water_fall_bottom, water_fall_top in zip(
+                self.__bottom_of_removed_water_falls[1:],
+                self.__top_of_removed_water_falls[1:]
+        ):
+            for y in range(water_fall_top.y, water_fall_bottom.y + 1):
+                self.__grid[y][water_fall_bottom.x] = "."
+
+            x_top_fall = water_fall_top.x
+            y_top_fall = water_fall_top.y
+            x = x_top_fall + 1
+            while x < len(self.__grid[y_top_fall]) and self.__grid[y_top_fall][x] == '|':
+                self.__grid[y_top_fall][x] = '.'
+                x += 1
+            x = x_top_fall - 1
+            while x > 0 and self.__grid[y_top_fall][x] == '|':
+                self.__grid[y_top_fall][x] = '.'
+                x -= 1
 
 
 def scan_input(input_string: str) -> Reservoir:
@@ -147,7 +168,16 @@ if __name__ == "__main__":
     with open("../../data/day17.txt", "r") as file:
         reservoir = scan_input("".join(file.readlines()).strip())
 
+    reservoir.flow(40000)
+    print(reservoir)
+
+# PART I
+
 # guess: 37477 is too low -- issues with falling into flowing water
 # guess: 38026 is too high -- no trace of error in print (reservoir.flow(40000); print(reservoir))
 # guess: 38025 is too high -- not off by one error
 # correct: 38021 -- 5 first rows are above top clay row
+
+# PART II
+
+# guess: 31964 is to low -- removing water from parallel streams
