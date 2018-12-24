@@ -60,6 +60,10 @@ class Location:
         else:
             return self.x > other.x
 
+    # TODO make Location immutable
+    def __hash__(self):
+        return self.x * self.y
+
     def __eq__(self, other: 'Location') -> bool:
         return self.x == other.x and self.y == other.y
 

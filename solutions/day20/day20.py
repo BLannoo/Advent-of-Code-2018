@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Set
 
 from solutions.day20.BracketParsing import parse_input_for_brackets, Section
 from solutions.utils.utils import grid_to_str, Location
@@ -44,7 +44,7 @@ class Map:
             self.add_door_east_of(location)
 
     # adds doors AND returns end location
-    def follow_commands(self, locations: List[Location], brackets: Section):
+    def follow_commands(self, locations: Set[Location], brackets: Section):
         brackets.follow_commands(locations, self)
 
     def follow_basic_commands(self, location: Location, commands: str) -> Location:
@@ -55,10 +55,10 @@ class Map:
             location = location.move(direction)
         return location
 
-    def follow_basic_command_lists(self, commands: str, locations: List[Location]) -> List[Location]:
-        new_locations = []
+    def follow_basic_command_lists(self, commands: str, locations: Set[Location]) -> Set[Location]:
+        new_locations = set()
         for location in locations:
-            new_locations.append(self.follow_basic_commands(location, commands))
+            new_locations |= {self.follow_basic_commands(location, commands)}
         return new_locations
 
     def size(self, start: Location):
@@ -137,7 +137,7 @@ def scan_input(radius: int, string_input: str) -> Map:
 
     brackets = parse_input_for_brackets(string_input)
     map_layout = initiate_map(radius)
-    locations = [Location(radius, radius)]
+    locations = {Location(radius, radius)}
 
     map_layout.follow_commands(locations, brackets)
 
@@ -148,16 +148,16 @@ if __name__ == "__main__":
     with open("../../data/day20.txt", "r") as file:
         input_string = file.readline()
 
-    radius = 50
+    SIZE = 50
 
-    brackets = parse_input_for_brackets(input_string)
+    actual_brackets = parse_input_for_brackets(input_string)
 
-    map_layout = initiate_map(radius)
+    actual_map_layout = initiate_map(SIZE)
 
-    locations = [Location(radius, radius)]
+    initial_locations = {Location(SIZE, SIZE)}
 
-    map_layout.follow_commands(locations, brackets)
+    actual_map_layout.follow_commands(initial_locations, actual_brackets)
 
-    print(map_layout)
+    print(actual_map_layout)
 
-    print(map_layout.size(Location(radius, radius)))
+    print(actual_map_layout.size(Location(SIZE, SIZE)))

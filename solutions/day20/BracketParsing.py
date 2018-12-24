@@ -1,10 +1,10 @@
-from typing import List
+from typing import List, Set
 
 from solutions.utils.utils import Location
 
 
 class Section:
-    def follow_commands(self, locations: List[Location], map_layout) -> List[Location]:
+    def follow_commands(self, locations: Set[Location], map_layout) -> Set[Location]:
         raise Exception(""
                         "Child classes of Section must implement: follow_commands(List[Location], Map)")
 
@@ -15,10 +15,10 @@ class StraightSection(Section):
             raise Exception(content + ": is not a straight section")
         self.__content = content
 
-    def follow_commands(self, locations: List[Location], map_layout) -> List[Location]:
+    def follow_commands(self, locations: Set[Location], map_layout) -> Set[Location]:
         return map_layout.follow_basic_command_lists(self.__content, locations)
 
-    def __eq__(self, other: 'Section') -> bool:
+    def __eq__(self, other: Section) -> bool:
         return (
                 isinstance(other, StraightSection)
                 and
@@ -30,18 +30,42 @@ class StraightSection(Section):
 
 
 class BranchedSection(Section):
-    def __init__(self, before_branch: Section, branches: List[Section], after_branch: Section):
+    def __init__(
+            self,
+            before_branch: Section,
+            branches: List[Section],
+            after_branch: Section,
+            depth: int = 0,
+            cursor_at_start: int = 0,
+            cursor_at_end: int = 0
+    ):
+        self.cursor_at_start = cursor_at_start
+        self.cursor_at_end = cursor_at_end
+        self.depth = depth
         self.__before_branch = before_branch
         self.__branches = branches
         self.__after_branch = after_branch
 
-    def follow_commands(self, locations: List[Location], map_layout) -> List[Location]:
-        locations_before_branch = self.__before_branch.follow_commands(locations, map_layout)
-        locations_after_branch = []
-        for branch in self.__branches:
-            locations_after_branch.extend(branch.follow_commands(locations_before_branch, map_layout))
+    def follow_commands(self, locations: Set[Location], map_layout) -> Set[Location]:
+        print(
+            "start following commands at depth:   " + str(self.depth)
+            + "   ; for section that started at cursor:   " + str(self.cursor_at_start)
+            + "   ; must do this for    " + str(len(locations)) + "   locations"
+        )
 
-        return self.__after_branch.follow_commands(locations_after_branch, map_layout)
+        locations_before_branch = self.__before_branch.follow_commands(locations, map_layout)
+        locations_after_branch = set()
+        for branch in self.__branches:
+            locations_after_branch |= branch.follow_commands(locations_before_branch, map_layout)
+
+        end_locations = self.__after_branch.follow_commands(locations_after_branch, map_layout)
+
+        print(
+            "done following commands at depth:   " + str(self.depth)
+            + "   ; for section that ended at cursor:   " + str(self.cursor_at_end)
+        )
+
+        return end_locations
 
     def __eq__(self, other: Section) -> bool:
         return (
@@ -68,6 +92,7 @@ class Commands:
     def __init__(self, commands: str):
         self.__commands = commands
         self.__cursor = 1
+        self.__depth = 0
 
     def __current(self) -> str:
         return self.__commands[self.__cursor:]
@@ -85,10 +110,10 @@ class Commands:
             return "|"
         return ")"
 
-    def __guard(self, type: str):
-        if self.__next_bracket() == type:
+    def __guard(self, flow_control_type: str):
+        if self.__next_bracket() == flow_control_type:
             raise Exception(
-                "Impossible control found: " + type
+                "Impossible control found: " + flow_control_type
                 + "; cursor at: " + str(self.__cursor)
                 + "; neighbouring commands where: " + self.__commands[self.__cursor-5:self.__cursor+5]
             )
@@ -106,9 +131,12 @@ class Commands:
         return self.__parse(self.__get_next_straight_section())
 
     def __parse(self, already_parsed_before_section: Section) -> Section:
+        self.__depth += 1
+        cursor_at_start = self.__cursor
 
         # no brackets
         if self.__next_bracket() != "(":
+            self.__depth -= 1
             return already_parsed_before_section
 
         # before branch
@@ -139,10 +167,15 @@ class Commands:
         self.__move_till_after_next_bracket()
         after_branch = self.parse()
 
+        self.__depth -= 1
+
         return BranchedSection(
             before_branch,
             branches,
-            after_branch
+            after_branch,
+            self.__depth,
+            cursor_at_start,
+            self.__cursor
         )
 
     def parse_next_branch(self):
