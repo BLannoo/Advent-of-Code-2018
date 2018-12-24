@@ -63,21 +63,21 @@ class Map:
 
     def size(self, start: Location):
 
-        visited_rooms = [start]
-        current_rooms = [start]
-        next_rooms = []
+        visited_rooms = {start}
+        current_rooms = {start}
+        next_rooms = set()
         step = -1
         while len(current_rooms) > 0:
             step += 1
             for room in current_rooms:
-                next_rooms.extend([
+                next_rooms |= {
                     next_room
                     for next_room in self.find_accessible_rooms(room)
                     if not visited_rooms.__contains__(next_room)
-                ])
-            visited_rooms.extend(next_rooms)
+                }
+            visited_rooms |= next_rooms
             current_rooms = next_rooms
-            next_rooms = []
+            next_rooms = set()
 
         return step
 
