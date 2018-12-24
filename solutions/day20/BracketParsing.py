@@ -30,28 +30,26 @@ class StraightSection(Section):
 
 
 class BranchedSection(Section):
-    def __init__(self, before_branch: 'Section', branch_1: 'Section', branch_2: 'Section', after_branch: 'Section'):
+    def __init__(self, before_branch: Section, branches: List[Section], after_branch: Section):
         self.__before_branch = before_branch
-        self.__branch_1 = branch_1
-        self.__branch_2 = branch_2
+        self.__branches = branches
         self.__after_branch = after_branch
 
     def follow_commands(self, locations: List[Location], map_layout) -> List[Location]:
         locations_before_branch = self.__before_branch.follow_commands(locations, map_layout)
         locations_after_branch = []
-        locations_after_branch.extend(self.__branch_1.follow_commands(locations_before_branch, map_layout))
-        locations_after_branch.extend(self.__branch_2.follow_commands(locations_before_branch, map_layout))
+        for branch in self.__branches:
+            locations_after_branch.extend(branch.follow_commands(locations_before_branch, map_layout))
+
         return self.__after_branch.follow_commands(locations_after_branch, map_layout)
 
-    def __eq__(self, other: 'Section') -> bool:
+    def __eq__(self, other: Section) -> bool:
         return (
                 isinstance(other, BranchedSection)
                 and
                 self.__before_branch == other.__before_branch
                 and
-                self.__branch_1 == other.__branch_1
-                and
-                self.__branch_2 == other.__branch_2
+                self.__branches == other.__branches
                 and
                 self.__after_branch == other.__after_branch
         )
@@ -60,9 +58,7 @@ class BranchedSection(Section):
         return (
                 str(self.__before_branch)
                 + '(' +
-                str(self.__branch_1)
-                + '|' +
-                str(self.__branch_2)
+                "|".join([str(branch) for branch in self.__branches])
                 + ')' +
                 str(self.__after_branch)
         )
@@ -91,7 +87,11 @@ class Commands:
 
     def __guard(self, type: str):
         if self.__next_bracket() == type:
-            raise Exception("Impossible control found: " + type)
+            raise Exception(
+                "Impossible control found: " + type
+                + "; cursor at: " + str(self.__cursor)
+                + "; neighbouring commands where: " + self.__commands[self.__cursor-5:self.__cursor+5]
+            )
 
     def __next_bracket_position(self) -> int:
         return self.__current().find(self.__next_bracket())
@@ -103,39 +103,49 @@ class Commands:
         self.__cursor += self.__next_bracket_position() + 1
 
     def parse(self) -> Section:
+        return self.__parse(self.__get_next_straight_section())
+
+    def __parse(self, already_parsed_before_section: Section) -> Section:
 
         # no brackets
-        if self.__next_bracket() == "$":
-            return self.__get_next_straight_section()
+        if self.__next_bracket() != "(":
+            return already_parsed_before_section
 
         # before branch
-        self.__guard("|")
-        self.__guard(")")
-        before_branch = self.__get_next_straight_section()
+        before_branch = already_parsed_before_section
         self.__move_till_after_next_bracket()
 
-        # branch 1
+        branches = []
+        current_section = self.__get_next_straight_section()
         self.__guard(")")
-        if self.__next_bracket() == "|":
-            branch_1 = self.__get_next_straight_section()
-            self.__move_till_after_next_bracket()
 
-            after_branch, branch_2 = self.parse_branch_2()
-        elif self.__next_bracket() == "(":
-            branch_1 = self.parse()
+        do_while = True
+        while do_while:
+            if self.__next_bracket() == "|":
+                branches.append(current_section)
+                self.__move_till_after_next_bracket()
+                current_section = self.__get_next_straight_section()
 
-            after_branch, branch_2 = self.parse_branch_2()
-        else:
-            raise Exception("Not yet implemented for:" + self.__next_bracket())
+                # after_branch, branch_2 = self.parse_next_branch()
+            elif self.__next_bracket() == "(":
+                current_section = self.__parse(current_section)
+
+                # after_branch, branch_2 = self.parse_next_branch()
+            else:
+                raise Exception("Not yet implemented for:" + self.__next_bracket())
+            do_while = self.__next_bracket() == "(" or self.__next_bracket() == "|"
+
+        branches.append(current_section)
+        self.__move_till_after_next_bracket()
+        after_branch = self.parse()
 
         return BranchedSection(
             before_branch,
-            branch_1,
-            branch_2,
+            branches,
             after_branch
         )
 
-    def parse_branch_2(self):
+    def parse_next_branch(self):
         self.__guard("|")
         if self.__next_bracket() == ")":
             branch_2 = self.__get_next_straight_section()

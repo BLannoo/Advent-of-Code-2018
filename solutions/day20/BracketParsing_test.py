@@ -12,7 +12,7 @@ class TestBracketParsing(unittest.TestCase):
 
     def test_one_bracket(self):
         self.assertEqual(
-            BranchedSection(StraightSection("N"), StraightSection("W"), StraightSection("E"), StraightSection("S")),
+            BranchedSection(StraightSection("N"), [StraightSection("W"), StraightSection("E")], StraightSection("S")),
             parse_input_for_brackets("^N(W|E)S$")
         )
 
@@ -20,10 +20,12 @@ class TestBracketParsing(unittest.TestCase):
         self.assertEqual(
             BranchedSection(
                 StraightSection("N"),
-                StraightSection("W"),
-                StraightSection("E"),
+                [
+                    StraightSection("W"),
+                    StraightSection("E")
+                ],
                 BranchedSection(
-                    StraightSection("S"), StraightSection("N"), StraightSection("S"), StraightSection("W")
+                    StraightSection("S"), [StraightSection("N"), StraightSection("S")], StraightSection("W")
                 )
             ),
             parse_input_for_brackets("^N(W|E)S(N|S)W$")
@@ -33,10 +35,12 @@ class TestBracketParsing(unittest.TestCase):
         self.assertEqual(
             BranchedSection(
                 StraightSection("N"),
-                BranchedSection(
-                    StraightSection("S"), StraightSection("N"), StraightSection("S"), StraightSection("W")
-                ),
-                StraightSection("W"),
+                [
+                    BranchedSection(
+                        StraightSection("S"), [StraightSection("N"), StraightSection("S")], StraightSection("W")
+                    ),
+                    StraightSection("W")
+                ],
                 StraightSection("E")
             ),
             parse_input_for_brackets("^N(S(N|S)W|W)E$")
@@ -46,11 +50,27 @@ class TestBracketParsing(unittest.TestCase):
         self.assertEqual(
             BranchedSection(
                 StraightSection("N"),
-                StraightSection("W"),
-                BranchedSection(
-                    StraightSection("S"), StraightSection("N"), StraightSection("S"), StraightSection("W")
-                ),
+                [
+                    StraightSection("W"),
+                    BranchedSection(
+                        StraightSection("S"), [StraightSection("N"), StraightSection("S")], StraightSection("W")
+                    )
+                ],
                 StraightSection("E")
             ),
             parse_input_for_brackets("^N(W|S(N|S)W)E$")
+        )
+
+    def test_3_option_branching(self):
+        self.assertEqual(
+            BranchedSection(
+                StraightSection("S"),
+                [
+                    StraightSection("W"),
+                    StraightSection("E"),
+                    StraightSection("S")
+                ],
+                StraightSection("S")
+            ),
+            parse_input_for_brackets("^S(W|E|S)S$")
         )

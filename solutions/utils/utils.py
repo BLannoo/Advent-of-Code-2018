@@ -29,6 +29,9 @@ DIRECTIONS_8 = [
 
 
 class Location:
+    y: int
+    x: int
+
     def __init__(self, x: int, y: int):
         self.x = x
         self.y = y

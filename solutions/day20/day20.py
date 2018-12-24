@@ -1,6 +1,6 @@
 from typing import List
 
-from solutions.day20.BracketParsing import parse_input_for_brackets, Section, StraightSection
+from solutions.day20.BracketParsing import parse_input_for_brackets, Section
 from solutions.utils.utils import grid_to_str, Location
 
 
@@ -61,6 +61,46 @@ class Map:
             new_locations.append(self.follow_basic_commands(location, commands))
         return new_locations
 
+    def size(self, start: Location):
+
+        visited_rooms = [start]
+        current_rooms = [start]
+        next_rooms = []
+        step = -1
+        while len(current_rooms) > 0:
+            step += 1
+            for room in current_rooms:
+                next_rooms.extend([
+                    next_room
+                    for next_room in self.find_accessible_rooms(room)
+                    if not visited_rooms.__contains__(next_room)
+                ])
+            visited_rooms.extend(next_rooms)
+            current_rooms = next_rooms
+            next_rooms = []
+
+        return step
+
+    def find_accessible_rooms(self, room) -> List[Location]:
+        return [
+            neighbour
+            for neighbour in room.neighbours4()
+            if self.has_door(room, neighbour)
+        ]
+
+    def has_door(self, room, neighbour) -> bool:
+        room_coords = to_coordinates(room)
+        neighbour_coords = to_coordinates(neighbour)
+
+        if room_coords.x == neighbour_coords.x:
+            y = int(abs(room_coords.y + neighbour_coords.y) / 2)
+            return self.__grid[y][room_coords.x] in ["|", "-"]
+        elif room_coords.y == neighbour_coords.y:
+            x = int(abs(room_coords.x + neighbour_coords.x) / 2)
+            return self.__grid[room_coords.y][x] in ["|", "-"]
+        else:
+            raise Exception('Doors can only be checked between neighbouring rooms')
+
 
 def create_base_grid(radius: int) -> List[List[str]]:
     number_of_rooms_side_by_side = radius * 2 + 1
@@ -102,3 +142,22 @@ def scan_input(radius: int, string_input: str) -> Map:
     map_layout.follow_commands(locations, brackets)
 
     return map_layout
+
+
+if __name__ == "__main__":
+    with open("../../data/day20.txt", "r") as file:
+        input_string = file.readline()
+
+    radius = 50
+
+    brackets = parse_input_for_brackets(input_string)
+
+    map_layout = initiate_map(radius)
+
+    locations = [Location(radius, radius)]
+
+    map_layout.follow_commands(locations, brackets)
+
+    print(map_layout)
+
+    print(map_layout.size(Location(radius, radius)))
