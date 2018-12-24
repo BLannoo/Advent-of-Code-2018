@@ -1,6 +1,6 @@
-import unittest
 from typing import List
 
+from solutions.day20.BracketParsing import parse_input_for_brackets, Section, StraightSection
 from solutions.utils.utils import grid_to_str, Location
 
 
@@ -33,6 +33,34 @@ class Map:
         coordinates = to_coordinates(location)
         self.__grid[coordinates.y][coordinates.x + 1] = "|"
 
+    def add_door(self, direction: str, location: Location):
+        if direction == "N":
+            self.add_door_north_of(location)
+        if direction == "W":
+            self.add_door_west_of(location)
+        if direction == "S":
+            self.add_door_south_of(location)
+        if direction == "E":
+            self.add_door_east_of(location)
+
+    # adds doors AND returns end location
+    def follow_commands(self, locations: List[Location], brackets: Section):
+        brackets.follow_commands(locations, self)
+
+    def follow_basic_commands(self, location: Location, commands: str) -> Location:
+        for direction in commands:
+            if direction not in ['N', 'W', 'S', 'E']:
+                raise Exception("direction must be in (N, E, S, W) but was: " + direction)
+            self.add_door(direction, location)
+            location = location.move(direction)
+        return location
+
+    def follow_basic_command_lists(self, commands: str, locations: List[Location]) -> List[Location]:
+        new_locations = []
+        for location in locations:
+            new_locations.append(self.follow_basic_commands(location, commands))
+        return new_locations
+
 
 def create_base_grid(radius: int) -> List[List[str]]:
     number_of_rooms_side_by_side = radius * 2 + 1
@@ -53,73 +81,24 @@ def initiate_map(radius: int) -> Map:
     return Map(grid)
 
 
-def scan_input(radius: int, string_input: str) -> Map:
-    base_map = initiate_map(radius)
-    direction = string_input[1]
+def move(direction: str, location: Location) -> Location:
     if direction == "N":
-        base_map.add_door_north_of(Location(radius, radius))
+        location = Location(location.x, location.y - 1)
     if direction == "W":
-        base_map.add_door_west_of(Location(radius, radius))
+        location = Location(location.x - 1, location.y)
     if direction == "S":
-        base_map.add_door_south_of(Location(radius, radius))
+        location = Location(location.x, location.y + 1)
     if direction == "E":
-        base_map.add_door_east_of(Location(radius, radius))
-    return base_map
+        location = Location(location.x + 1, location.y)
+    return location
 
 
-class TestDay20(unittest.TestCase):
-    def test_single_step_N_map(self):
-        self.assertEqual(
-            str(scan_input(1, "^N$")),
-            """
-            #######
-            #.#.#.#
-            ###-###
-            #.#X#.#
-            #######
-            #.#.#.#
-            #######
-            """.strip().replace(" ", "")
-        )
+def scan_input(radius: int, string_input: str) -> Map:
 
-    def test_single_step_W_map(self):
-        self.assertEqual(
-            str(scan_input(1, "^W$")),
-            """
-            #######
-            #.#.#.#
-            #######
-            #.|X#.#
-            #######
-            #.#.#.#
-            #######
-            """.strip().replace(" ", "")
-        )
+    brackets = parse_input_for_brackets(string_input)
+    map_layout = initiate_map(radius)
+    locations = [Location(radius, radius)]
 
-    def test_single_step_S_map(self):
-        self.assertEqual(
-            str(scan_input(1, "^S$")),
-            """
-            #######
-            #.#.#.#
-            #######
-            #.#X#.#
-            ###-###
-            #.#.#.#
-            #######
-            """.strip().replace(" ", "")
-        )
+    map_layout.follow_commands(locations, brackets)
 
-    def test_single_step_E_map(self):
-        self.assertEqual(
-            str(scan_input(1, "^E$")),
-            """
-            #######
-            #.#.#.#
-            #######
-            #.#X|.#
-            #######
-            #.#.#.#
-            #######
-            """.strip().replace(" ", "")
-        )
+    return map_layout

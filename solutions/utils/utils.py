@@ -72,6 +72,16 @@ class Location:
     def __repr__(self) -> str:
         return 'Location(x=' + str(self.x) + ', y=' + str(self.y) + ')'
 
+    def move(self, direction):
+        if direction == "N":
+            return Location(self.x, self.y - 1)
+        if direction == "W":
+            return Location(self.x - 1, self.y)
+        if direction == "S":
+            return Location(self.x, self.y + 1)
+        if direction == "E":
+            return Location(self.x + 1, self.y)
+
 
 def filter_outside(locations: List[Location], max_inclusive, min_inclusive=0) -> List[Location]:
     return [
