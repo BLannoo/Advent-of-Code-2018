@@ -148,7 +148,7 @@ if __name__ == "__main__":
     with open("../../data/day20.txt", "r") as file:
         input_string = file.readline()
 
-    SIZE = 50
+    SIZE = 52
 
     actual_brackets = parse_input_for_brackets(input_string)
 
@@ -161,3 +161,8 @@ if __name__ == "__main__":
     print(actual_map_layout)
 
     print(actual_map_layout.size(Location(SIZE, SIZE)))
+
+
+# Part I
+# 4011 answer is to low -- grid was to small (50) -- grid 52 is perfect
+# 4184 correct
