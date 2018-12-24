@@ -63,6 +63,8 @@ class Map:
 
     def size(self, start: Location):
 
+        rooms_distances = {}
+
         visited_rooms = {start}
         current_rooms = {start}
         next_rooms = set()
@@ -79,7 +81,9 @@ class Map:
             current_rooms = next_rooms
             next_rooms = set()
 
-        return step
+            rooms_distances[step] = len(current_rooms)
+
+        return step, rooms_distances
 
     def find_accessible_rooms(self, room) -> List[Location]:
         return [
@@ -160,9 +164,18 @@ if __name__ == "__main__":
 
     print(actual_map_layout)
 
-    print(actual_map_layout.size(Location(SIZE, SIZE)))
+    size, distances = actual_map_layout.size(Location(SIZE, SIZE))
+    print("Part I: longest path is: " + str(size))
+
+    number_of_rooms = sum([
+        rooms for steps, rooms in distances.items()
+        if steps >= 999
+    ])
+    print("Part II: number of rooms more then 1000 doors away " + str(number_of_rooms))
 
 
 # Part I
 # 4011 answer is to low -- grid was to small (50) -- grid 52 is perfect
 # 4184 correct
+
+# Part II: 8596
