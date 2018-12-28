@@ -169,8 +169,8 @@ def match_opcodes(example: tuple) -> Set:
 
 def extract_examples():
     examples = []
-    with open("../../data/day16.txt", "r") as file:
-        match = re.match('Before: \[(\d), (\d), (\d), (\d)\]', file.readline())
+    with open("../../data/day16a.txt", "r") as file:
+        match = re.match('Before: \[(\d+), (\d+), (\d+), (\d+)\]', file.readline())
         while match:
             input_register = [
                 int(match.group(1)),
@@ -178,14 +178,14 @@ def extract_examples():
                 int(match.group(3)),
                 int(match.group(4))
             ]
-            match = re.match('(\d+) (\d) (\d) (\d)', file.readline())
+            match = re.match('(\d+) (\d+) (\d+) (\d+)', file.readline())
             instructions = (
                 int(match.group(1)),
                 int(match.group(2)),
                 int(match.group(3)),
                 int(match.group(4))
             )
-            match = re.match('After:  \[(\d), (\d), (\d), (\d)\]', file.readline())
+            match = re.match('After: {2}\[(\d+), (\d+), (\d+), (\d+)\]', file.readline())
             output_register = [
                 int(match.group(1)),
                 int(match.group(2)),
@@ -198,7 +198,8 @@ def extract_examples():
                 output_register
             ))
             file.readline()  # skip empty line
-            match = re.match('Before: \[(\d), (\d), (\d), (\d)\]', file.readline())
+            match = re.match('Before: \[(\d+), (\d+), (\d+), (\d+)\]', file.readline())
+
     return examples
 
 
@@ -365,15 +366,18 @@ class TestDay16(unittest.TestCase):
 
     def test_input(self):
         examples = extract_examples()
+        print(len(examples))
 
         counts, potential_opcodes = check_examples(examples)
 
         print(counts)
+        print(sum([cases for count, cases in counts.items() if count >= 3]))
         # pprint(potential_opcodes)
 
         # Part I:
         # 112 to low -- missed the equality operations
-        # 165 to low
+        # 165 to low -- 3 or more opcodes
+        # 677
 
         defined_codes = determine_codes(potential_opcodes)
 
@@ -381,7 +385,25 @@ class TestDay16(unittest.TestCase):
         pprint(defined_codes)
 
         print("not definable codes:")
-        pprint({
+        print({
             code: functions.difference(defined_codes.values())
             for code, functions in potential_opcodes.items()
         })
+
+        register = [0, 0, 0, 0]
+
+        with open("../../data/day16b.txt", "r") as file:
+
+            match = re.match('(\d+) (\d+) (\d+) (\d+)', file.readline())
+            while match:
+                instructions = (
+                    int(match.group(1)),
+                    int(match.group(2)),
+                    int(match.group(3)),
+                    int(match.group(4))
+                )
+
+                register = defined_codes[instructions[0]](register, instructions)
+
+                match = re.match('(\d+) (\d+) (\d+) (\d+)', file.readline())
+            print(register)
