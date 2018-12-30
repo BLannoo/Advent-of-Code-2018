@@ -1,6 +1,9 @@
 import re
-import unittest
 from typing import List
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import cm
 
 
 def manhattan(pos1: tuple, pos2: tuple) -> int:
@@ -82,9 +85,19 @@ class Swarm:
         ])
 
     def bots_in_range(self, point: tuple):
-        return len([
-            bot for bot in self.bots
+        return sum(
+            1 for bot in self.bots
             if manhattan(bot.pos, point) <= bot.r
+        )
+
+    def sort_by_radius(self):
+        self.bots.sort(key=lambda bot: bot.r)
+
+    def limit_swarm(self, reference_point, missing_distance):
+        return Swarm([
+            bot
+            for bot in self.bots
+            if abs(manhattan(bot.pos, reference_point) - bot.r) < missing_distance
         ])
 
 
@@ -92,91 +105,96 @@ def scan_nano_bots() -> Swarm:
     return Swarm.create_from_file("../../data/day23.txt")
 
 
-class TestCaseDay23(unittest.TestCase):
-
-    def test_create_swarm(self):
-        self.assertCountEqual(
-            Swarm(bots=[
-                NanoBot(pos=(0, 0, 0), r=4),
-                NanoBot(pos=(1, 0, 0), r=1),
-                NanoBot(pos=(4, 0, 0), r=3),
-                NanoBot(pos=(0, 2, 0), r=1),
-                NanoBot(pos=(0, 5, 0), r=3),
-                NanoBot(pos=(0, 0, 3), r=1),
-                NanoBot(pos=(1, 1, 1), r=1),
-                NanoBot(pos=(1, 1, 2), r=1),
-                NanoBot(pos=(1, 3, 1), r=1)
-            ]).bots,
-            Swarm.create("""
-            pos=<0,0,0>, r=4
-            pos=<1,0,0>, r=1
-            pos=<4,0,0>, r=3
-            pos=<0,2,0>, r=1
-            pos=<0,5,0>, r=3
-            pos=<0,0,3>, r=1
-            pos=<1,1,1>, r=1
-            pos=<1,1,2>, r=1
-            pos=<1,3,1>, r=1
-            """.strip().replace("  ", "")).bots
-        )
-
-    def test_get_strongest(self):
-        self.assertEqual(
-            NanoBot(pos=(0, 0, 0), r=4),
-            Swarm(bots=[
-                NanoBot(pos=(0, 0, 0), r=4),
-                NanoBot(pos=(1, 0, 0), r=1),
-                NanoBot(pos=(4, 0, 0), r=3),
-                NanoBot(pos=(0, 2, 0), r=1),
-                NanoBot(pos=(0, 5, 0), r=3),
-                NanoBot(pos=(0, 0, 3), r=1),
-                NanoBot(pos=(1, 1, 1), r=1),
-                NanoBot(pos=(1, 1, 2), r=1),
-                NanoBot(pos=(1, 3, 1), r=1)
-            ]).calc_strongest()
-        )
-
-    def test_count_in_range(self):
-        self.assertEqual(
-            7,
-            Swarm(bots=[
-                NanoBot(pos=(0, 0, 0), r=4),
-                NanoBot(pos=(1, 0, 0), r=1),
-                NanoBot(pos=(4, 0, 0), r=3),
-                NanoBot(pos=(0, 2, 0), r=1),
-                NanoBot(pos=(0, 5, 0), r=3),
-                NanoBot(pos=(0, 0, 3), r=1),
-                NanoBot(pos=(1, 1, 1), r=1),
-                NanoBot(pos=(1, 1, 2), r=1),
-                NanoBot(pos=(1, 3, 1), r=1)
-            ]).in_range_of(NanoBot(pos=(0, 0, 0), r=4))
-        )
-
-    def test_count_in_range_with_negative_values(self):
-        self.assertEqual(
-            7,
-            Swarm(bots=[
-                NanoBot(pos=(-0, -0, -0), r=4),
-                NanoBot(pos=(-1, -0, -0), r=1),
-                NanoBot(pos=(-4, -0, -0), r=3),
-                NanoBot(pos=(-0, -2, -0), r=1),
-                NanoBot(pos=(-0, -5, -0), r=3),
-                NanoBot(pos=(-0, -0, -3), r=1),
-                NanoBot(pos=(-1, -1, -1), r=1),
-                NanoBot(pos=(-1, -1, -2), r=1),
-                NanoBot(pos=(-1, -3, -1), r=1)
-            ]).in_range_of(NanoBot(pos=(0, 0, 0), r=4))
-        )
-
-    def test_part_I(self):
-        swarm = scan_nano_bots()
-        self.assertEqual(
-            240,
-            swarm.in_range_of(swarm.calc_strongest())
-        )
-
-    def test_part_II(self):
-        swarm = scan_nano_bots()
+def plot_swarm(swarm: Swarm, color):
+    plot_positions([(*bot.pos, color(bot)) for bot in swarm.bots])
 
 
+def plot_positions(data):
+    fig = plt.figure(figsize=(16, 5))
+    ax = fig.add_subplot(1, 2, 1, projection='3d')
+    cloud = ax.scatter(
+        [data_point[0] for data_point in data],
+        [data_point[1] for data_point in data],
+        [data_point[2] for data_point in data],
+        c=[data_point[3] for data_point in data],
+        cmap=cm.coolwarm
+    )
+    ax.view_init(elev=45, azim=45)
+    fig.colorbar(cloud, shrink=0.5, aspect=5)
+    ax = fig.add_subplot(1, 2, 2, projection='3d')
+    cloud = ax.scatter(
+        [data_point[0] for data_point in data],
+        [data_point[1] for data_point in data],
+        [data_point[2] for data_point in data],
+        c=[data_point[3] for data_point in data],
+        cmap=cm.coolwarm
+    )
+    ax.view_init(elev=-45, azim=45 + 180)
+    fig.colorbar(cloud, shrink=0.5, aspect=5)
+    plt.show()
+
+
+def create_grid_within_bounds(old_positions, swarm: Swarm):
+    x = np.linspace(
+        min(old_positions, key=lambda pos: pos[0])[0],
+        max(old_positions, key=lambda pos: pos[0])[0],
+        20,
+        dtype=int
+    )
+    y = np.linspace(
+        min(old_positions, key=lambda pos: pos[1])[1],
+        max(old_positions, key=lambda pos: pos[1])[1],
+        20,
+        dtype=int
+    )
+    z = np.linspace(
+        min(old_positions, key=lambda pos: pos[2])[2],
+        max(old_positions, key=lambda pos: pos[2])[2],
+        20,
+        dtype=int
+    )
+    new_positions = []
+    for x_val in x:
+        for y_val in y:
+            for z_val in z:
+                pos = (x_val, y_val, z_val)
+                new_positions.append((*pos, swarm.bots_in_range(pos)))
+
+    return new_positions
+
+
+def select_pos_and_counts_bigger_then(pos_and_counts, min_counts: int):
+    return [
+        pos_and_count
+        for pos_and_count in pos_and_counts
+        if pos_and_count[3] >= min_counts
+    ]
+
+
+def report(pos, swarm):
+    print("Point: ", pos, " has ", swarm.bots_in_range(pos), " bots in range!")
+
+
+def hist_distance_deficit(reference_point, swarm):
+    deficits = [
+        manhattan(bot.pos, reference_point) - bot.r
+        for bot in swarm.bots
+    ]
+    plt.hist(deficits, 100)
+    plt.show()
+
+
+if __name__ == "__main__":
+    actual_swarm = scan_nano_bots()
+
+    report((0, 0, 0), actual_swarm)
+
+    bot_in_range_of_most_others = max(actual_swarm.bots, key=lambda bot: actual_swarm.bots_in_range(bot.pos))
+    report(bot_in_range_of_most_others.pos, actual_swarm)
+
+    hist_distance_deficit(bot_in_range_of_most_others.pos, actual_swarm)
+
+    limited_swarm = actual_swarm.limit_swarm(bot_in_range_of_most_others.pos, 0.2e8)
+
+    hist_distance_deficit(bot_in_range_of_most_others.pos, limited_swarm)
 

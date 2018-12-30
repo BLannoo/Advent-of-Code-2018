@@ -1,3 +1,8 @@
 jupyter
+jupyterthemes
+jupyter_contrib_nbextensions
+autopep8
+
 matplotlib
+plotly
 numpy
